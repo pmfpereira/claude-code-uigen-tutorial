@@ -12,11 +12,7 @@ on:
 
 jobs:
   claude:
-    if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    if: contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -32,8 +28,8 @@ jobs:
       - name: Project Setup
         run: |
           npm run setup
-          npm run dev:daemon
-
+          npm run dev:daemon &
+          sleep 10
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
@@ -54,38 +50,54 @@ jobs:
               }
             }
 
-          claude_args: >-
-            --allowedTools
-            "Bash(npm:*),Bash(sqlite3:*),
-            mcp__playwright__browser_snapshot,
-            mcp__playwright__browser_click,
-            mcp__playwright__browser_close,
-            mcp__playwright__browser_resize,
-            mcp__playwright__browser_console_messages,
-            mcp__playwright__browser_handle_dialog,
-            mcp__playwright__browser_file_upload,
-            mcp__playwright__browser_install,
-            mcp__playwright__browser_press_key,
-            mcp__playwright__browser_navigate,
-            mcp__playwright__browser_navigate_back,
-            mcp__playwright__browser_navigate_forward,
-            mcp__playwright__browser_network_requests,
-            mcp__playwright__browser_pdf_save,
-            mcp__playwright__browser_take_screenshot,
-            mcp__playwright__browser_drag,
-            mcp__playwright__browser_hover,
-            mcp__playwright__browser_type,
-            mcp__playwright__browser_select_option,
-            mcp__playwright__browser_tab_list,
-            mcp__playwright__browser_tab_new,
-            mcp__playwright__browser_tab_select,
-            mcp__playwright__browser_tab_close,
-            mcp__playwright__browser_generate_playwright_test,
-            mcp__playwright__browser_wait_for"
+          claude_args: |
+            --allowedTools "Bash(npm:*),Bash(sqlite3:*),mcp__playwright__browser_snapshot,mcp__playwright__browser_click,mcp__playwright__browser_close,mcp__playwright__browser_resize,mcp__playwright__browser_console_messages,mcp__playwright__browser_handle_dialog,mcp__playwright__browser_file_upload,mcp__playwright__browser_install,mcp__playwright__browser_press_key,mcp__playwright__browser_navigate,mcp__playwright__browser_navigate_back,mcp__playwright__browser_navigate_forward,mcp__playwright__browser_network_requests,mcp__playwright__browser_pdf_save,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_drag,mcp__playwright__browser_hover,mcp__playwright__browser_type,mcp__playwright__browser_select_option,mcp__playwright__browser_tab_list,mcp__playwright__browser_tab_new,mcp__playwright__browser_tab_select,mcp__playwright__browser_tab_close,mcp__playwright__browser_generate_playwright_test,mcp__playwright__browser_wait_for"
 
           prompt: |
-            The project is already set up with all dependencies installed.
-            The server is already running at localhost:3000. Logs from it
-            are being written to logs.txt. If needed, you can query the
-            db with the 'sqlite3' cli. Use mcp__playwright tools to
-            launch a browser and interact with the app.
+              You were invoked because a user mentioned @claude in a GitHub issue comment.
+
+              Your goal is to help investigate or implement the request described in the issue.
+
+              Environment details:
+
+              - The repository has already been checked out.
+              - Dependencies are already installed.
+              - The development server is already running at: http://localhost:3000
+              - Server logs are written to: logs.txt
+              - The application uses SQLite and can be queried with the `sqlite3` CLI.
+
+              Available tools:
+
+              - Bash commands such as `npm` and `sqlite3`
+              - Playwright browser automation tools via MCP (`mcp__playwright__*`)
+
+              How to work:
+
+              1. Read the issue description and all comments to understand the request.
+              2. If the task involves the UI or application behavior:
+                - Use the Playwright MCP tools to open a browser.
+                - Navigate to http://localhost:3000
+                - Interact with the application like a user.
+                - Capture screenshots if useful.
+              3. If the task requires data inspection:
+                - Use `sqlite3` to inspect the database.
+                - Run queries to understand stored data and relationships.
+              4. If the issue describes a bug:
+                - Reproduce the issue using Playwright.
+                - Inspect logs (logs.txt) if necessary.
+                - Identify the root cause in the code.
+              5. If a code change is required:
+                - Modify the code in the repository.
+                - Ensure the change fixes the problem.
+                - Optionally validate again using Playwright.
+
+              When finished:
+
+              - Summarize what you did.
+              - Explain any findings or fixes.
+              - Post a clear response in the GitHub issue thread.
+
+              Always prefer:
+              - Using Playwright MCP tools for UI interaction
+              - Using sqlite3 for data inspection
+              - Reading the code before making changes
