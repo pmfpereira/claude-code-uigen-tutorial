@@ -63,51 +63,41 @@ jobs:
           claude_args: |
             --allowedTools "Bash(npm:*),Bash(sqlite3:*),mcp__playwright__browser_snapshot,mcp__playwright__browser_click,mcp__playwright__browser_close,mcp__playwright__browser_resize,mcp__playwright__browser_console_messages,mcp__playwright__browser_handle_dialog,mcp__playwright__browser_file_upload,mcp__playwright__browser_install,mcp__playwright__browser_press_key,mcp__playwright__browser_navigate,mcp__playwright__browser_navigate_back,mcp__playwright__browser_navigate_forward,mcp__playwright__browser_network_requests,mcp__playwright__browser_pdf_save,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_drag,mcp__playwright__browser_hover,mcp__playwright__browser_type,mcp__playwright__browser_select_option,mcp__playwright__browser_tab_list,mcp__playwright__browser_tab_new,mcp__playwright__browser_tab_select,mcp__playwright__browser_tab_close,mcp__playwright__browser_generate_playwright_test,mcp__playwright__browser_wait_for"
 
-          prompt: |
-              You were invoked because a user mentioned @claude in a GitHub issue comment.
+            prompt: |
+            User request:
+            ${{ github.event.issue.body || github.event.comment.body }}
 
-              Your goal is to help investigate or implement the request described in the issue.
+            You are an AI QA engineer and developer.
 
-              Environment details:
+            Always reproduce the issue in the browser BEFORE reading the code.
 
-              - The repository has already been checked out.
-              - Dependencies are already installed.
-              - The development server is already running at: http://localhost:3000
-              - Server logs are written to: logs.txt
-              - The application uses SQLite and can be queried with the `sqlite3` CLI.
+            Follow this workflow strictly:
 
-              Available tools:
+            STEP 1 — INVESTIGATE
+            - Use Playwright MCP to explore the application.
+            - Navigate to http://localhost:3000.
+            - Interact with the UI like a real user.
+            - Take screenshots if useful.
+            - Inspect logs.txt if needed.
+            - Query the SQLite database with `sqlite3` if data is involved.
 
-              - Bash commands such as `npm` and `sqlite3`
-              - Playwright browser automation tools via MCP (`mcp__playwright__*`)
+            STEP 2 — REPRODUCE
+            - Create a Playwright test that reproduces the problem.
+            - Save the test under tests/.
+            - Run the tests using npm.
 
-              How to work:
+            STEP 3 — PROPOSE FIX
+            - If the test fails, identify the root cause.
+            - Modify the code to fix the issue.
+            - Run the tests again to confirm the fix.
 
-              1. Read the issue description and all comments to understand the request.
-              2. If the task involves the UI or application behavior:
-                - Use the Playwright MCP tools to open a browser.
-                - Navigate to http://localhost:3000
-                - Interact with the application like a user.
-                - Capture screenshots if useful.
-              3. If the task requires data inspection:
-                - Use `sqlite3` to inspect the database.
-                - Run queries to understand stored data and relationships.
-              4. If the issue describes a bug:
-                - Reproduce the issue using Playwright.
-                - Inspect logs (logs.txt) if necessary.
-                - Identify the root cause in the code.
-              5. If a code change is required:
-                - Modify the code in the repository.
-                - Ensure the change fixes the problem.
-                - Optionally validate again using Playwright.
+            OUTPUT
+            - Post a comment in the issue summarizing:
+              Investigation
+              Reproduction steps
+              Root cause
+              Proposed fix
 
-              When finished:
-
-              - Summarize what you did.
-              - Explain any findings or fixes.
-              - Post a clear response in the GitHub issue thread.
-
-              Always prefer:
-              - Using Playwright MCP tools for UI interaction
-              - Using sqlite3 for data inspection
-              - Reading the code before making changes
+            Always prefer:
+            - Browser interaction with Playwright
+            - Tests before code changes
